@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#E6EEE7"/>
+  <circle cx="400" cy="304" r="214" fill="#D9E5DB"/>
+  <ellipse cx="400" cy="500" rx="168" ry="18" fill="#C9D9CC" opacity=".8"/>
+
+  <rect x="288" y="352" width="248" height="112" rx="26" fill="#E6DAC1"/>
+  <rect x="300" y="330" width="248" height="112" rx="26" fill="#F2E9D6" stroke="#E0D3B8" stroke-width="3"/>
+
+  <rect x="356" y="330" width="112" height="112" rx="6" fill="#2A6149" opacity=".92"/>
+  <rect x="356" y="330" width="112" height="112" rx="6" fill="none" stroke="#224C3A" stroke-width="2"/>
+  <text x="412" y="384" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="2.5" fill="#F8F4EA">SARI</text>
+  <text x="412" y="406" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="9" letter-spacing="1.2" fill="#C6DACD">COCONUT</text>
+
+  <path d="M548 372c22-26 52-34 78-26" stroke="#6E8B63" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <g fill="#7D9A72">
+    <ellipse cx="560" cy="360" rx="16" ry="8" transform="rotate(-28 560 360)"/>
+    <ellipse cx="584" cy="350" rx="16" ry="8" transform="rotate(-14 584 350)"/>
+    <ellipse cx="608" cy="346" rx="15" ry="8" transform="rotate(-4 608 346)"/>
+  </g>
+</svg>

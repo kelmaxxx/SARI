@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product management — SARI</title>
+  <meta name="description" content="Add, edit, and remove SARI catalog products.">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to product management</a>
+
+  <header class="site-header" data-header>
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="SARI home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-text">
+          <span class="brand-name">SARI</span>
+          <span class="brand-tag">Small-batch essentials</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html">Catalog</a>
+        <a class="nav-admin" href="admin.html" aria-current="page">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container admin">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Product management</h1>
+        <p class="page-lede">Add, edit, and remove catalog items. Changes are saved in this browser until the Product API is connected.</p>
+      </div>
+      <button type="button" class="btn btn-primary" id="add-product">
+        <i data-lucide="plus" aria-hidden="true"></i>
+        Add product
+      </button>
+    </header>
+
+    <div class="admin-toolbar">
+      <div class="search">
+        <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
+        <label class="visually-hidden" for="admin-search">Search products</label>
+        <input id="admin-search" type="search" placeholder="Search by name or category" autocomplete="off">
+      </div>
+      <p class="results" id="admin-count" aria-live="polite"></p>
+    </div>
+
+    <div class="table-card">
+      <table class="product-table" id="product-table">
+        <caption class="visually-hidden">All products in the catalog</caption>
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Category</th>
+            <th scope="col">Price</th>
+            <th scope="col">Updated</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="product-rows"></tbody>
+      </table>
+
+      <div class="admin-empty" id="admin-empty" hidden>
+        <span class="state-icon"><i data-lucide="package-open" aria-hidden="true"></i></span>
+        <h2>No products yet</h2>
+        <p>Add the first product to start the catalog.</p>
+        <button type="button" class="btn btn-primary" data-empty-add>
+          <i data-lucide="plus" aria-hidden="true"></i>
+          Add product
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html" aria-label="SARI home">
+          <span class="brand-mark" aria-hidden="true">S</span>
+          <span class="brand-text">
+            <span class="brand-name">SARI</span>
+            <span class="brand-tag">Small-batch essentials</span>
+          </span>
+        </a>
+        <p>Pantry staples, homeware, and body care from small Filipino workshops.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="index.html">Catalog</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+
+      <div class="footer-meta">
+        <p>© <span data-year></span> SARI</p>
+        <p>A student project on NoSQL and cloud storage. Products are illustrative.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Add / edit product -->
+  <dialog id="product-dialog" class="modal" aria-labelledby="dialog-title">
+    <form class="modal-body" id="product-form" novalidate>
+      <header class="modal-head">
+        <div>
+          <p class="eyebrow" id="dialog-kicker">New product</p>
+          <h2 id="dialog-title">Add a product</h2>
+        </div>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="modal-scroll">
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input id="f-name" name="name" maxlength="80" autocomplete="off" placeholder="e.g. Barako Coffee Beans">
+          <p class="field-error" data-error="name"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-category">Category</label>
+            <select id="f-category" name="category"></select>
+            <p class="field-error" data-error="category"></p>
+          </div>
+          <div class="field">
+            <label for="f-price">Price (₱)</label>
+            <input id="f-price" name="price" type="number" inputmode="decimal" min="1" step="1" placeholder="380">
+            <p class="field-error" data-error="price"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-description">Description</label>
+          <textarea id="f-description" name="description" rows="4" maxlength="600" placeholder="What is it, where is it from, and how is it used?"></textarea>
+          <p class="field-error" data-error="description"></p>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Product image</span>
+          <div class="image-picker">
+            <div class="image-preview" id="image-preview"></div>
+            <div class="image-picker-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="choose-image">Choose image</button>
+              <p class="field-hint">JPG, PNG, or WebP · up to 2 MB</p>
+            </div>
+            <input type="file" id="f-image" accept="image/*" hidden>
+          </div>
+          <p class="field-error" data-error="image"></p>
+        </div>
+      </div>
+
+      <footer class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-product">Save product</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Delete confirmation -->
+  <dialog id="confirm-dialog" class="modal modal-sm" aria-labelledby="confirm-title">
+    <div class="modal-body">
+      <header class="modal-head">
+        <div>
+          <p class="eyebrow">Delete product</p>
+          <h2 id="confirm-title">Remove this product?</h2>
+        </div>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="modal-scroll">
+        <p class="confirm-text" id="confirm-text"></p>
+      </div>
+
+      <footer class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">Delete product</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <div class="toast-host" id="toast-host" aria-live="polite"></div>
+
+  <script src="js/vendor/lucide.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

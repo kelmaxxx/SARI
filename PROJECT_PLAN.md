@@ -325,13 +325,14 @@ The project is complete when:
 
 ## 10. Current Status
 
-**Planning and documentation stage.**
+**Frontend development started (November 20, 2026).**
 
-- Documentation is being prepared.
-- The folder structure exists but is empty.
-- No application code has been written.
+- The customer catalog, product detail page, and admin product management screens are implemented with local sample data.
+- Sample products use local SVG artwork; admin changes persist in browser `localStorage`.
+- All pages read and write through `frontend/js/api.js`, ready to switch to API Gateway.
+- Backend, DynamoDB, S3, and CloudWatch work has not started.
 - No AWS resources have been created.
-- No packages have been installed.
-- Git has not been initialized.
+- No packages have been installed and there is no build step.
+- Git is initialized.
 
-All items in this plan are planned work, not completed work.
+Everything else in this plan remains planned work.

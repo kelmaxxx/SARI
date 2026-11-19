@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <clipPath id="basket-body">
+      <path d="M252 314h296l-44 186a20 20 0 0 1-19 15H315a20 20 0 0 1-19-15z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="600" fill="#EFE6D6"/>
+  <circle cx="400" cy="296" r="214" fill="#E5D7C2"/>
+  <ellipse cx="400" cy="520" rx="176" ry="17" fill="#D6C3A7" opacity=".75"/>
+
+  <path d="M292 316C292 168 508 168 508 316" fill="none" stroke="#B98A56" stroke-width="26" stroke-linecap="round"/>
+
+  <path d="M252 314h296l-44 186a20 20 0 0 1-19 15H315a20 20 0 0 1-19-15z" fill="#C69A63"/>
+
+  <g clip-path="url(#basket-body)" stroke="#A97A43" stroke-width="7" opacity=".55">
+    <path d="M252 344h296M252 386h296M252 428h296M252 470h296"/>
+    <path d="M280 314l-12 202M330 314l-6 202M380 314v202M430 314v202M480 314l6 202M530 314l12 202" opacity=".5"/>
+  </g>
+
+  <rect x="238" y="292" width="324" height="38" rx="19" fill="#B98A56"/>
+  <path d="M262 306h276" stroke="#A97A43" stroke-width="4" stroke-dasharray="8 8" opacity=".7"/>
+</svg>

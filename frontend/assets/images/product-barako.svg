@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#EFE6D6"/>
+  <circle cx="400" cy="292" r="212" fill="#E4D5C0"/>
+  <ellipse cx="400" cy="512" rx="152" ry="18" fill="#D9C8AE" opacity=".7"/>
+
+  <path d="M302 196h196l-13 266a26 26 0 0 1-26 24H341a26 26 0 0 1-26-24z" fill="#22392C"/>
+  <path d="M302 196h196l-4 40H306z" fill="#1A2E23"/>
+  <path d="M316 214h168" stroke="#0F241B" stroke-width="4" stroke-dasharray="6 8" opacity=".6"/>
+
+  <circle cx="400" cy="330" r="64" fill="#F7F1E4"/>
+  <text x="400" y="324" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="19" letter-spacing="3" fill="#22392C">SARI</text>
+  <text x="400" y="348" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="2" fill="#6C5B3E">BARAKO</text>
+
+  <g transform="rotate(-20 540 470)">
+    <ellipse cx="540" cy="470" rx="25" ry="35" fill="#4B2F1F"/>
+    <path d="M540 438c-9 10-9 54 0 64" stroke="#EFE6D6" stroke-width="4" fill="none"/>
+  </g>
+  <g transform="rotate(14 592 452)">
+    <ellipse cx="592" cy="452" rx="21" ry="29" fill="#5A3A27"/>
+    <path d="M592 426c-7 8-7 44 0 52" stroke="#EFE6D6" stroke-width="3.5" fill="none"/>
+  </g>
+</svg>

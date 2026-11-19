@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SARI — Everyday goods from Filipino makers</title>
+  <meta name="description" content="SARI is a small catalog of pantry staples, homeware, and body care from independent Filipino makers.">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to catalog</a>
+
+  <header class="site-header" data-header>
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="SARI home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-text">
+          <span class="brand-name">SARI</span>
+          <span class="brand-tag">Small-batch essentials</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html" aria-current="page">Catalog</a>
+        <a class="nav-admin" href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero container">
+      <p class="eyebrow">Small-batch · Filipino makers</p>
+      <h1>Everyday goods, <br>made close to home.</h1>
+      <p class="hero-lede">Pantry staples, homeware, and body care from independent makers — a small catalog, chosen with care.</p>
+    </section>
+
+    <section class="catalog container" aria-labelledby="catalog-title">
+      <h2 id="catalog-title" class="visually-hidden">Product catalog</h2>
+
+      <div class="toolbar">
+        <div class="search">
+          <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
+          <label class="visually-hidden" for="search">Search products</label>
+          <input id="search" type="search" placeholder="Search products" autocomplete="off">
+          <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden>
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="chips" id="category-chips" role="group" aria-label="Filter by category"></div>
+        <p class="results" id="results-count" aria-live="polite"></p>
+      </div>
+
+      <ul class="product-grid" id="product-grid"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html" aria-label="SARI home">
+          <span class="brand-mark" aria-hidden="true">S</span>
+          <span class="brand-text">
+            <span class="brand-name">SARI</span>
+            <span class="brand-tag">Small-batch essentials</span>
+          </span>
+        </a>
+        <p>Pantry staples, homeware, and body care from small Filipino workshops.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="index.html">Catalog</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+
+      <div class="footer-meta">
+        <p>© <span data-year></span> SARI</p>
+        <p>A student project on NoSQL and cloud storage. Products are illustrative.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/lucide.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/catalog.js"></script>
+</body>
+</html>

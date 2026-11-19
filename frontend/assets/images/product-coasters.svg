@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#E6EEE7"/>
+  <circle cx="400" cy="300" r="214" fill="#D8E4DA"/>
+
+  <ellipse cx="330" cy="286" rx="96" ry="92" fill="#EFE4CC" opacity=".55"/>
+  <ellipse cx="474" cy="286" rx="96" ry="92" fill="#EFE4CC" opacity=".55"/>
+  <ellipse cx="330" cy="430" rx="96" ry="92" fill="#EFE4CC" opacity=".55"/>
+
+  <g fill="#FAF6EA" stroke="#D9CEB8" stroke-width="6">
+    <circle cx="330" cy="278" r="92"/>
+    <circle cx="474" cy="286" r="92"/>
+    <circle cx="402" cy="402" r="92"/>
+    <circle cx="330" cy="430" r="92"/>
+  </g>
+
+  <g fill="none" stroke="#EBE0C9" stroke-width="4">
+    <circle cx="330" cy="278" r="74"/>
+    <circle cx="474" cy="286" r="74"/>
+    <circle cx="402" cy="402" r="74"/>
+    <circle cx="330" cy="430" r="74"/>
+  </g>
+
+  <g fill="#C08E52" opacity=".55">
+    <circle cx="474" cy="286" r="9"/>
+    <circle cx="330" cy="278" r="7"/>
+    <circle cx="402" cy="402" r="8"/>
+  </g>
+</svg>

@@ -17,7 +17,7 @@ The project demonstrates how **NoSQL databases and distributed storage** can be 
 | Subtopic | Cloud Data Centers & Content Distribution (G1) |
 | Type | Academic project |
 | Project deadline | **November 29, 2026** |
-| Current status | **Planning and documentation stage** — no application code or AWS resources have been created yet |
+| Current status | **Frontend development** — catalog and admin interfaces run on local sample data; AWS resources are not created yet |
 
 ---
 
@@ -132,17 +132,29 @@ SARI/
 ├── documentation/
 │   └── evidence/
 ├── frontend/
+│   ├── index.html                  Customer catalog (browse, search, filters)
+│   ├── product.html                Product details (?id=...)
+│   ├── admin.html                  Product management
 │   ├── assets/
 │   │   ├── icons/
-│   │   └── images/
+│   │   └── images/                 Sample product artwork and favicon
 │   ├── css/
+│   │   └── main.css                Design tokens, layout, and page styles
 │   └── js/
+│       ├── config.js               API URL and mock-data switch
+│       ├── mock-data.js            Sample product records
+│       ├── api.js                  Data access layer (mock now, API later)
+│       ├── ui.js                   Shared helpers (formatting, icons, toasts)
+│       ├── catalog.js              Catalog page behaviour
+│       ├── product.js              Product detail behaviour
+│       ├── admin.js                Admin behaviour
+│       └── vendor/lucide.min.js    Lucide icons (local copy)
 ├── .gitignore
 ├── PROJECT_PLAN.md
 └── README.md
 ```
 
-The folders are placeholders for upcoming work. Project documentation is the only completed deliverable at this stage.
+The backend and AWS resources are still placeholders.
 
 ---
 
@@ -152,7 +164,7 @@ The folders are placeholders for upcoming work. Project documentation is the onl
 | --- | --- |
 | Project documentation | In progress |
 | Repository structure | Initial scaffold created |
-| Frontend | Not started |
+| Frontend | Catalog, product details, and admin UI working on local sample data |
 | DynamoDB design | Not started |
 | Lambda and API Gateway | Not started |
 | S3 and IAM setup | Not started |
@@ -164,19 +176,42 @@ The folders are placeholders for upcoming work. Project documentation is the onl
 
 ## Getting Started
 
-There is no runnable application yet. Once development begins, setup and run instructions will be added here.
+### Frontend (available now)
 
-Planned local development approach:
+The frontend runs on local sample data and does not need an AWS account.
 
-1. Open the frontend files directly in a browser or use a simple local static server.
-2. Use Docker for local backend development and containerization practice.
-3. Use AWS services only after the team has reviewed and approved the planned resources.
+1. Open a terminal in the project folder.
+2. Start a static server:
+
+   ```
+   python -m http.server 8123 --directory frontend
+   ```
+
+3. Open <http://localhost:8123/index.html>.
+4. Use `/admin.html` for product management and `/product.html?id=p-barako` for a detail page.
+
+Opening `frontend/index.html` directly also works in most browsers, though a local server is closer to the S3 deployment.
+
+Sample data lives in `frontend/js/mock-data.js`. Admin changes are stored in the browser's `localStorage` under `sari.products.v1`; clear that key (or run `localStorage.clear()` in the browser console) to restore the sample catalog.
+
+### Backend (not available yet)
+
+1. Use Docker for local backend development and containerization practice.
+2. Use AWS services only after the team has reviewed and approved the planned resources.
+
+## Frontend Notes
+
+- Pages talk only to `frontend/js/api.js`. Connecting the API means setting `apiBaseUrl` and `useMockData: false` in `frontend/js/config.js`.
+- Product fields follow the agreed record: `id, name, description, price, category, imageUrl, imageKey, createdAt, updatedAt`.
+- The S3/`POST /images` upload flow will replace the temporary data-URL upload in `api.js`.
+- There is no build step; the files deploy as they are.
 
 ---
 
 ## Documentation
 
 - [PROJECT_PLAN.md](PROJECT_PLAN.md) — objectives, architecture, requirements, responsibilities, timeline, and development rules.
+- [Frontend test results](documentation/evidence/frontend/frontend-test-results.md) — checks run against the sample-data frontend, with screenshots.
 
 ---
 

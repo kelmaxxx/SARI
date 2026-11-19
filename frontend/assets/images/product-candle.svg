@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#F2E7DC"/>
+  <circle cx="400" cy="300" r="214" fill="#E8D9CA"/>
+  <ellipse cx="400" cy="512" rx="132" ry="16" fill="#DCCABB" opacity=".8"/>
+
+  <circle cx="400" cy="238" r="74" fill="#F6D8A2" opacity=".35"/>
+
+  <path d="M400 214c-12 18-12 30 0 44 12-14 12-26 0-44z" fill="#E2A23F"/>
+  <path d="M400 228c-6 9-6 15 0 22 6-7 6-13 0-22z" fill="#F6D182"/>
+  <path d="M400 262v26" stroke="#4A3A22" stroke-width="4" stroke-linecap="round"/>
+
+  <rect x="318" y="286" width="164" height="206" rx="20" fill="#C98446" opacity=".92"/>
+  <rect x="326" y="286" width="148" height="196" rx="16" fill="#C98446"/>
+  <rect x="330" y="292" width="140" height="34" rx="10" fill="#F1E4CB"/>
+  <rect x="330" y="326" width="140" height="8" fill="#D9B77E" opacity=".55"/>
+
+  <rect x="342" y="352" width="116" height="76" rx="5" fill="#F7F1E4"/>
+  <text x="400" y="380" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="2" fill="#22392C">SARI</text>
+  <text x="400" y="402" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="10" letter-spacing="1.5" fill="#6C5B3E">SAMPAGUITA</text>
+  <text x="400" y="418" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="9" letter-spacing="1.5" fill="#8B7A5C">SOY CANDLE</text>
+
+  <ellipse cx="352" cy="452" rx="8" ry="16" fill="#E4A75F" opacity=".45"/>
+</svg>

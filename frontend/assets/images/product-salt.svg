@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#E9E7DC"/>
+  <circle cx="400" cy="294" r="212" fill="#DEDCCD"/>
+  <ellipse cx="400" cy="508" rx="150" ry="17" fill="#D0CEBD" opacity=".8"/>
+
+  <path d="M306 214h188l16 270a18 18 0 0 1-18 20H308a18 18 0 0 1-18-20z" fill="#D8C3A0"/>
+  <path d="M306 214h188l4 42H302z" fill="#C9B18A"/>
+  <path d="M320 232h160" stroke="#B29A72" stroke-width="4" stroke-dasharray="5 7"/>
+
+  <rect x="322" y="300" width="156" height="104" rx="6" fill="#F7F1E4"/>
+  <text x="400" y="334" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" letter-spacing="2.5" fill="#22392C">ILOCOS</text>
+  <text x="400" y="360" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="13" letter-spacing="2" fill="#6C5B3E">SEA SALT</text>
+  <text x="400" y="384" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="10" letter-spacing="1.5" fill="#8B7A5C">500 G</text>
+
+  <g fill="#FBFAF3" stroke="#D5D2C2" stroke-width="2">
+    <path d="M540 476l10-14 12 12-9 12z"/>
+    <path d="M574 494l9-12 11 11-8 11z"/>
+    <path d="M518 502l8-11 10 10-7 10z"/>
+  </g>
+</svg>
