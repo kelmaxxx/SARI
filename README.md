@@ -211,6 +211,7 @@ Sample data lives in `frontend/js/mock-data.js`. Admin changes are stored in the
 ## Documentation
 
 - [PROJECT_PLAN.md](PROJECT_PLAN.md) — objectives, architecture, requirements, responsibilities, timeline, and development rules.
+- [API_CONTRACT.md](documentation/API_CONTRACT.md) — proposed frontend/backend contract, pending review by the team.
 - [Frontend test results](documentation/evidence/frontend/frontend-test-results.md) — checks run against the sample-data frontend, with screenshots.
 
 ---

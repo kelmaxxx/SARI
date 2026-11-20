@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -17,11 +17,7 @@
   <header class="site-header" data-header>
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="SARI home">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span class="brand-text">
-          <span class="brand-name">SARI</span>
-          <span class="brand-tag">Small-batch essentials</span>
-        </span>
+        <img class="brand-logo" src="assets/images/logo/sari-white.png" alt="" width="755" height="240">
       </a>
       <nav class="site-nav" aria-label="Main">
         <a href="index.html" aria-current="page">Catalog</a>
@@ -31,29 +27,62 @@
   </header>
 
   <main id="main">
-    <section class="hero container">
-      <p class="eyebrow">Small-batch · Filipino makers</p>
-      <h1>Everyday goods, <br>made close to home.</h1>
-      <p class="hero-lede">Pantry staples, homeware, and body care from independent makers — a small catalog, chosen with care.</p>
+    <!-- Hero stage: 2 screens tall. The inner pin sticks for one screen while
+         the letters disperse; the catalog below is pulled up one screen so it
+         slides over the pinned hero like a glass sheet. -->
+    <section class="hero-stage" data-hero aria-labelledby="hero-title">
+      <div class="hero-pin">
+        <div class="hero-ambient" aria-hidden="true">
+          <span class="ambient ambient-s"></span>
+          <span class="ambient ambient-a"></span>
+          <span class="ambient ambient-r"></span>
+          <span class="ambient ambient-i"></span>
+        </div>
+
+        <!-- Wordmark letters: one image per letter so the scroll vectors still apply. -->
+        <div class="hero-word" aria-hidden="true">
+          <img class="hero-letter is-s" src="assets/images/logo/letter-s.png" alt="" width="1008" height="1100">
+          <img class="hero-letter is-a" src="assets/images/logo/letter-a.png" alt="" width="1245" height="1100">
+          <img class="hero-letter is-r" src="assets/images/logo/letter-r.png" alt="" width="1098" height="1100">
+          <img class="hero-letter is-i" src="assets/images/logo/letter-i.png" alt="" width="471" height="1100">
+        </div>
+
+        <div class="container hero-copy">
+          <div class="hero-intro">
+            <p class="eyebrow">Small-batch · Filipino makers</p>
+            <h1 id="hero-title">Everyday goods, <br>made close to home.</h1>
+          </div>
+          <p class="hero-lede">Pantry staples, homeware, and body care from independent makers — a small catalog, chosen with care.</p>
+        </div>
+
+        <a class="scroll-cue" href="#catalog">
+          <span>Scroll to explore</span>
+          <i data-lucide="arrow-down" aria-hidden="true"></i>
+        </a>
+      </div>
     </section>
 
-    <section class="catalog container" aria-labelledby="catalog-title">
-      <h2 id="catalog-title" class="visually-hidden">Product catalog</h2>
+    <!-- Catalog: the glass sheet. Everything inside is the existing catalog,
+         unchanged except for the wrapper and the id used by the scroll cue. -->
+    <section class="catalog-shell" id="catalog" aria-labelledby="catalog-title">
+      <div class="container catalog-glass">
+        <h2 id="catalog-title" class="visually-hidden">Product catalog</h2>
 
-      <div class="toolbar">
-        <div class="search">
-          <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
-          <label class="visually-hidden" for="search">Search products</label>
-          <input id="search" type="search" placeholder="Search products" autocomplete="off">
-          <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden>
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
+        <div class="toolbar">
+          <div class="search">
+            <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
+            <label class="visually-hidden" for="search">Search products</label>
+            <input id="search" type="search" placeholder="Search products" autocomplete="off">
+            <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden>
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="chips" id="category-chips" role="group" aria-label="Filter by category"></div>
+          <p class="results" id="results-count" aria-live="polite"></p>
         </div>
-        <div class="chips" id="category-chips" role="group" aria-label="Filter by category"></div>
-        <p class="results" id="results-count" aria-live="polite"></p>
-      </div>
 
-      <ul class="product-grid" id="product-grid"></ul>
+        <ul class="product-grid" id="product-grid"></ul>
+      </div>
     </section>
   </main>
 
@@ -61,11 +90,7 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <a class="brand" href="index.html" aria-label="SARI home">
-          <span class="brand-mark" aria-hidden="true">S</span>
-          <span class="brand-text">
-            <span class="brand-name">SARI</span>
-            <span class="brand-tag">Small-batch essentials</span>
-          </span>
+          <img class="brand-logo" src="assets/images/logo/sari-white.png" alt="" width="755" height="240">
         </a>
         <p>Pantry staples, homeware, and body care from small Filipino workshops.</p>
       </div>
@@ -87,6 +112,7 @@
   <script src="js/mock-data.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/hero.js"></script>
   <script src="js/catalog.js"></script>
 </body>
 </html>
