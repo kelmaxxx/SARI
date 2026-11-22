@@ -1,3 +1,4 @@
+
 // Data access for the SARI catalog.
 // Every page calls SARI.api only, so connecting the AWS backend means
 // changing this file and config.js — not the page scripts.
@@ -59,6 +60,7 @@ window.SARI = window.SARI || {};
     var haystack = [product.name, product.description, product.category]
       .join(" ")
       .toLowerCase();
+
     return haystack.indexOf(query.toLowerCase()) !== -1;
   }
 
@@ -69,17 +71,27 @@ window.SARI = window.SARI || {};
     var category = String(input.category || "").trim();
     var price = Number(input.price);
 
-    if (name.length < 2) errors.name = "Enter a product name (at least 2 characters).";
-    if (!category) errors.category = "Choose a category.";
+    if (name.length < 2) {
+      errors.name = "Enter a product name (at least 2 characters).";
+    }
+
+    if (!category) {
+      errors.category = "Choose a category.";
+    }
+
     if (!Number.isFinite(price) || price <= 0) {
       errors.price = "Enter a price greater than 0.";
     } else if (price > 1000000) {
       errors.price = "Keep the price under ₱1,000,000.";
     }
+
     if (description.length < 20) {
       errors.description = "Add a description of at least 20 characters.";
     }
-    if (!input.imageUrl) errors.image = "Add a product image.";
+
+    if (!input.imageUrl) {
+      errors.image = "Add a product image.";
+    }
 
     return errors;
   }
@@ -110,7 +122,9 @@ window.SARI = window.SARI || {};
 
     return fetch(apiUrl(path), {
       method: options.method || "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: options.body,
     }).then(function (res) {
       if (!res.ok) {
@@ -120,11 +134,17 @@ window.SARI = window.SARI || {};
             return {};
           })
           .then(function (body) {
-            var err = new Error(body.message || "The server could not complete the request.");
+            var message =
+              body.message ||
+              (body.error && body.error.message) ||
+              "The server could not complete the request.";
+
+            var err = new Error(message);
             err.status = res.status;
             throw err;
           });
       }
+
       return res.status === 204 ? null : res.json();
     });
   }
@@ -136,6 +156,7 @@ window.SARI = window.SARI || {};
 
     getProducts: async function (filters) {
       filters = filters || {};
+
       var query = String(filters.q || "").trim();
       var category = filters.category || "all";
 
@@ -146,13 +167,20 @@ window.SARI = window.SARI || {};
       }
 
       var params = new URLSearchParams();
+
       if (query) params.set("q", query);
       if (category !== "all") params.set("category", category);
 
       var qs = params.toString();
-      var data = await request("/products" + (qs ? "?" + qs : ""));
-      // shortcut: assumes the list endpoint returns an array; adjust here if the contract returns { items }.
-      return Array.isArray(data) ? data : data.items || [];
+
+      var data = await request(
+        "/products" + (qs ? "?" + qs : "")
+      );
+
+      // AWS Lambda returns { products: [...], count: 10 }.
+      return Array.isArray(data)
+        ? data
+        : (data.products || data.items || []);
     },
 
     getProduct: async function (id) {
@@ -160,6 +188,7 @@ window.SARI = window.SARI || {};
         var found = readProducts().find(function (product) {
           return product.id === id;
         });
+
         return found ? JSON.parse(JSON.stringify(found)) : null;
       }
 
@@ -188,6 +217,7 @@ window.SARI = window.SARI || {};
 
     createProduct: async function (input) {
       var errors = validateProduct(input);
+
       if (Object.keys(errors).length) {
         throw new Error("Please check the highlighted fields.");
       }
@@ -202,6 +232,7 @@ window.SARI = window.SARI || {};
         var products = readProducts().slice();
         products.unshift(product);
         saveProducts(products);
+
         return JSON.parse(JSON.stringify(product));
       }
 
@@ -213,21 +244,31 @@ window.SARI = window.SARI || {};
 
     updateProduct: async function (id, input) {
       var errors = validateProduct(input);
+
       if (Object.keys(errors).length) {
         throw new Error("Please check the highlighted fields.");
       }
 
       if (isMock()) {
         var products = readProducts().slice();
+
         var index = products.findIndex(function (product) {
           return product.id === id;
         });
-        if (index === -1) throw new Error("That product could not be found.");
 
-        products[index] = Object.assign({}, products[index], cleanInput(input), {
-          updatedAt: new Date().toISOString(),
-        });
+        if (index === -1) {
+          throw new Error("That product could not be found.");
+        }
+
+        products[index] = Object.assign(
+          {},
+          products[index],
+          cleanInput(input),
+          { updatedAt: new Date().toISOString() }
+        );
+
         saveProducts(products);
+
         return JSON.parse(JSON.stringify(products[index]));
       }
 
@@ -240,38 +281,57 @@ window.SARI = window.SARI || {};
     deleteProduct: async function (id) {
       if (isMock()) {
         var products = readProducts().slice();
+
         var next = products.filter(function (product) {
           return product.id !== id;
         });
+
         if (next.length === products.length) {
           throw new Error("That product could not be found.");
         }
+
         saveProducts(next);
         return;
       }
 
-      await request("/products/" + encodeURIComponent(id), { method: "DELETE" });
+      await request("/products/" + encodeURIComponent(id), {
+        method: "DELETE"
+      });
     },
 
     uploadImage: function (file) {
-      if (!file) return Promise.reject(new Error("Choose an image first."));
-      if (!/^image\//.test(file.type)) {
-        return Promise.reject(new Error("Choose an image file (JPG, PNG, or WebP)."));
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        return Promise.reject(new Error("Choose an image under 2 MB."));
+      if (!file) {
+        return Promise.reject(new Error("Choose an image first."));
       }
 
-      // shortcut: the mock stores the image as a data URL in localStorage;
-      // the S3 upload (POST /images) will replace this at integration.
+      if (!/^image\//.test(file.type)) {
+        return Promise.reject(
+          new Error("Choose an image file (JPG, PNG, or WebP).")
+        );
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        return Promise.reject(
+          new Error("Choose an image under 2 MB.")
+        );
+      }
+
+      // Temporary local image handling.
+      // S3 upload integration will replace this later.
       return new Promise(function (resolve, reject) {
         var reader = new FileReader();
+
         reader.onload = function () {
-          resolve({ imageUrl: reader.result, imageKey: "local/" + file.name });
+          resolve({
+            imageUrl: reader.result,
+            imageKey: "local/" + file.name
+          });
         };
+
         reader.onerror = function () {
           reject(new Error("The image could not be read."));
         };
+
         reader.readAsDataURL(file);
       });
     },
