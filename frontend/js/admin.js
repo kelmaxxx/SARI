@@ -254,9 +254,12 @@
         imageKey: state.image.key,
       };
 
-      var hasImage = Boolean(state.image.url || state.image.file);
+      var hasImage = Boolean(state.image.key || state.image.file);
       var errors = SARI.api.validateProduct(
-        Object.assign({}, input, { imageUrl: hasImage ? "pending" : "" })
+        Object.assign({}, input, {
+          imageUrl: hasImage ? "pending" : "",
+          imageKey: hasImage ? "pending" : "",
+        })
       );
 
       if (Object.keys(errors).length) {
@@ -270,9 +273,10 @@
       try {
         if (state.image.file) {
           var uploaded = await SARI.api.uploadImage(state.image.file);
-          input.imageUrl = uploaded.imageUrl;
           input.imageKey = uploaded.imageKey;
-          state.image = { file: null, url: uploaded.imageUrl, key: uploaded.imageKey };
+          // Mock mode returns a data URL; real mode keeps the existing preview.
+          input.imageUrl = uploaded.imageUrl || input.imageUrl;
+          state.image = { file: null, url: input.imageUrl, key: uploaded.imageKey };
         }
 
         if (state.editing) {

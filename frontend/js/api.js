@@ -89,7 +89,8 @@ window.SARI = window.SARI || {};
       errors.description = "Add a description of at least 20 characters.";
     }
 
-    if (!input.imageUrl) {
+    // Mock mode stores a data URL; real mode stores the S3 object key.
+    if (isMock() ? !input.imageUrl : !input.imageKey) {
       errors.image = "Add a product image.";
     }
 
@@ -316,23 +317,47 @@ window.SARI = window.SARI || {};
         );
       }
 
-      // Temporary local image handling.
-      // S3 upload integration will replace this later.
-      return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
+      // Mock mode keeps the image in this browser as a data URL.
+      if (isMock()) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
 
-        reader.onload = function () {
-          resolve({
-            imageUrl: reader.result,
-            imageKey: "local/" + file.name
-          });
-        };
+          reader.onload = function () {
+            resolve({
+              imageUrl: reader.result,
+              imageKey: "local/" + file.name
+            });
+          };
 
-        reader.onerror = function () {
-          reject(new Error("The image could not be read."));
-        };
+          reader.onerror = function () {
+            reject(new Error("The image could not be read."));
+          };
 
-        reader.readAsDataURL(file);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Real mode: ask the API for a presigned S3 PUT, then upload the file.
+      return request("/images", {
+        method: "POST",
+        body: JSON.stringify({ contentType: file.type }),
+      }).then(function (ticket) {
+        if (!ticket || !ticket.uploadUrl || !ticket.imageKey) {
+          throw new Error("The upload could not be prepared.");
+        }
+
+        // S3 expects the raw file, not JSON, and the signed Content-Type.
+        return fetch(ticket.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        }).then(function (res) {
+          if (!res.ok) {
+            throw new Error("The image could not be uploaded. Please try again.");
+          }
+
+          return { imageKey: ticket.imageKey };
+        });
       });
     },
   };
