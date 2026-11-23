@@ -145,6 +145,7 @@ SARI/
 │       ├── mock-data.js            Sample product records
 │       ├── api.js                  Data access layer (mock now, API later)
 │       ├── ui.js                   Shared helpers (formatting, icons, toasts)
+│       ├── theme.js                Light/dark theme switch (saved per browser)
 │       ├── catalog.js              Catalog page behaviour
 │       ├── product.js              Product detail behaviour
 │       ├── admin.js                Admin behaviour
@@ -202,6 +203,7 @@ Sample data lives in `frontend/js/mock-data.js`. Admin changes are stored in the
 ## Frontend Notes
 
 - Pages talk only to `frontend/js/api.js`. Connecting the API means setting `apiBaseUrl` and `useMockData: false` in `frontend/js/config.js`.
+- The header toggle switches light/dark. It follows the operating system until someone picks a theme, then remembers the choice in `localStorage` under `sari.theme`.
 - Product fields follow the agreed record: `id, name, description, price, category, imageUrl, imageKey, createdAt, updatedAt`.
 - The S3/`POST /images` upload flow will replace the temporary data-URL upload in `api.js`.
 - There is no build step; the files deploy as they are.
