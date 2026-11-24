@@ -37,44 +37,58 @@
         <h1>Product management</h1>
         <p class="page-lede">Add, edit, and remove catalog items. Changes are saved in this browser until the Product API is connected.</p>
       </div>
-      <button type="button" class="btn btn-primary" id="add-product">
+      <button type="button" class="btn btn-primary" id="add-product" hidden>
         <i data-lucide="plus" aria-hidden="true"></i>
         Add product
       </button>
     </header>
 
-    <div class="admin-toolbar">
-      <div class="search">
-        <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
-        <label class="visually-hidden" for="admin-search">Search products</label>
-        <input id="admin-search" type="search" placeholder="Search by name or category" autocomplete="off">
-      </div>
-      <p class="results" id="admin-count" aria-live="polite"></p>
+    <div class="page-loading" id="admin-loading" role="status">
+      <i data-lucide="loader-circle" class="spin" aria-hidden="true"></i>
+      <span>Checking your sign-in…</span>
     </div>
 
-    <div class="table-card">
-      <table class="product-table" id="product-table">
-        <caption class="visually-hidden">All products in the catalog</caption>
-        <thead>
-          <tr>
-            <th scope="col">Product</th>
-            <th scope="col">Category</th>
-            <th scope="col">Price</th>
-            <th scope="col">Updated</th>
-            <th scope="col"><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </thead>
-        <tbody id="product-rows"></tbody>
-      </table>
+    <section class="state state-wide" id="admin-auth" hidden aria-labelledby="admin-auth-title">
+      <span class="state-icon"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span>
+      <h3 id="admin-auth-title">Sign in to manage products</h3>
+      <p id="admin-auth-message" aria-live="polite"></p>
+      <button type="button" class="btn btn-primary" id="admin-auth-action">Sign in</button>
+    </section>
 
-      <div class="admin-empty" id="admin-empty" hidden>
-        <span class="state-icon"><i data-lucide="package-open" aria-hidden="true"></i></span>
-        <h2>No products yet</h2>
-        <p>Add the first product to start the catalog.</p>
-        <button type="button" class="btn btn-primary" data-empty-add>
-          <i data-lucide="plus" aria-hidden="true"></i>
-          Add product
-        </button>
+    <div id="admin-content" hidden>
+      <div class="admin-toolbar">
+        <div class="search">
+          <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
+          <label class="visually-hidden" for="admin-search">Search products</label>
+          <input id="admin-search" type="search" placeholder="Search by name or category" autocomplete="off">
+        </div>
+        <p class="results" id="admin-count" aria-live="polite"></p>
+      </div>
+
+      <div class="table-card">
+        <table class="product-table" id="product-table">
+          <caption class="visually-hidden">All products in the catalog</caption>
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th scope="col">Category</th>
+              <th scope="col">Price</th>
+              <th scope="col">Updated</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="product-rows"></tbody>
+        </table>
+
+        <div class="admin-empty" id="admin-empty" hidden>
+          <span class="state-icon"><i data-lucide="package-open" aria-hidden="true"></i></span>
+          <h2>No products yet</h2>
+          <p>Add the first product to start the catalog.</p>
+          <button type="button" class="btn btn-primary" data-empty-add>
+            <i data-lucide="plus" aria-hidden="true"></i>
+            Add product
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -187,11 +201,11 @@
   <div class="toast-host" id="toast-host" aria-live="polite"></div>
 
   <script src="js/vendor/lucide.min.js"></script>
-  <script src="js/config.js"></script>
+  <script src="js/config.js?v=2"></script>
   <script src="js/auth.js"></script>
   <script src="js/mock-data.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/api.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/admin.js?v=2"></script>
 </body>
 </html>

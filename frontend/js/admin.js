@@ -34,7 +34,109 @@
     els.confirmText = document.getElementById("confirm-text");
     els.confirmButton = document.getElementById("confirm-delete");
 
+    els.loading = document.getElementById("admin-loading");
+    els.auth = document.getElementById("admin-auth");
+    els.authMessage = document.getElementById("admin-auth-message");
+    els.authAction = document.getElementById("admin-auth-action");
+    els.content = document.getElementById("admin-content");
+
     if (!els.rows) return;
+
+    var auth;
+    try {
+      auth = await SARI.auth.init();
+    } catch (err) {
+      auth = authFailure(err);
+    }
+
+    var gate = gateFor(auth);
+    if (gate) {
+      showGate(gate);
+      return;
+    }
+
+    await startAdmin();
+  }
+
+  // Returns the gate state when the admin must not start, or null to proceed.
+  function gateFor(auth) {
+    if (auth.enabled && !auth.signedIn) return auth;
+
+    // Real API mode must never open the admin without authentication.
+    if ((window.SARI_CONFIG || {}).useMockData === false && !auth.enabled) {
+      return {
+        status: "config",
+        error: "Sign-in is not configured for this site. Contact the site owner.",
+      };
+    }
+
+    return null;
+  }
+
+  function authFailure(err) {
+    return {
+      enabled: true,
+      status: "unavailable",
+      signedIn: false,
+      error: (err && err.message) || "Could not check your sign-in. Please try again.",
+    };
+  }
+
+  function showGate(auth) {
+    els.loading.hidden = true;
+    els.content.hidden = true;
+    els.addButton.hidden = true;
+    els.auth.hidden = false;
+    els.authMessage.textContent = auth.error || "";
+    els.authAction.disabled = false;
+
+    if (auth.status === "config") {
+      els.authAction.textContent = "Reload";
+      els.authAction.onclick = function () {
+        window.location.reload();
+      };
+      return;
+    }
+
+    var retry = auth.status === "unavailable";
+    els.authAction.textContent = retry ? "Try again" : "Sign in";
+
+    els.authAction.onclick = async function () {
+      if (!retry) {
+        els.authAction.disabled = true;
+        SARI.auth.signIn().catch(function (err) {
+          els.authAction.disabled = false;
+          els.authMessage.textContent =
+            (err && err.message) || "Sign-in could not start. Please try again.";
+        });
+        return;
+      }
+
+      els.authAction.disabled = true;
+      els.auth.hidden = true;
+      els.loading.hidden = false;
+
+      var next;
+      try {
+        next = await SARI.auth.init();
+      } catch (err) {
+        next = authFailure(err);
+      }
+
+      var gate = gateFor(next);
+      if (gate) {
+        showGate(gate);
+      } else {
+        await startAdmin();
+      }
+    };
+  }
+
+  async function startAdmin() {
+    els.loading.hidden = true;
+    els.auth.hidden = true;
+    els.content.hidden = false;
+    els.addButton.hidden = false;
 
     els.addButton.addEventListener("click", function () {
       openForm(null);
