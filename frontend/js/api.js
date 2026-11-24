@@ -121,12 +121,41 @@ window.SARI = window.SARI || {};
   function request(path, options) {
     options = options || {};
 
-    return fetch(apiUrl(path), {
-      method: options.method || "GET",
-      headers: {
+    var tokenPromise = Promise.resolve(null);
+
+    if (options.auth) {
+      if (!SARI.auth || typeof SARI.auth.getAccessToken !== "function") {
+        return Promise.reject(
+          new Error("Sign-in is unavailable. Please reload and try again.")
+        );
+      }
+
+      tokenPromise = Promise.resolve()
+        .then(function () {
+          return SARI.auth.getAccessToken();
+        })
+        .then(function (token) {
+          if (!token) {
+            throw new Error("Your session has expired. Please sign in again.");
+          }
+          return token;
+        });
+    }
+
+    return tokenPromise.then(function (token) {
+      var headers = {
         "Content-Type": "application/json"
-      },
-      body: options.body,
+      };
+
+      if (token) {
+        headers.Authorization = "Bearer " + token;
+      }
+
+      return fetch(apiUrl(path), {
+        method: options.method || "GET",
+        headers: headers,
+        body: options.body,
+      });
     }).then(function (res) {
       if (!res.ok) {
         return res
@@ -239,6 +268,7 @@ window.SARI = window.SARI || {};
 
       return request("/products", {
         method: "POST",
+        auth: true,
         body: JSON.stringify(cleanInput(input)),
       });
     },
@@ -275,6 +305,7 @@ window.SARI = window.SARI || {};
 
       return request("/products/" + encodeURIComponent(id), {
         method: "PUT",
+        auth: true,
         body: JSON.stringify(cleanInput(input)),
       });
     },
@@ -296,7 +327,8 @@ window.SARI = window.SARI || {};
       }
 
       await request("/products/" + encodeURIComponent(id), {
-        method: "DELETE"
+        method: "DELETE",
+        auth: true,
       });
     },
 
@@ -340,6 +372,7 @@ window.SARI = window.SARI || {};
       // Real mode: ask the API for a presigned S3 PUT, then upload the file.
       return request("/images", {
         method: "POST",
+        auth: true,
         body: JSON.stringify({ contentType: file.type }),
       }).then(function (ticket) {
         if (!ticket || !ticket.uploadUrl || !ticket.imageKey) {
