@@ -169,7 +169,7 @@ window.SARI = window.SARI || {};
 
       var params = new URLSearchParams();
 
-      if (query) params.set("q", query);
+      if (query) params.set("search", query);
       if (category !== "all") params.set("category", category);
 
       var qs = params.toString();
