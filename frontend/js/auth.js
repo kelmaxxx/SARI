@@ -10,8 +10,10 @@ window.SARI = window.SARI || {};
   var TOKENS_KEY = "sari.auth.tokens";
   var FLOW_KEY = "sari.auth.flow";
   var REFRESH_SKEW_MS = 60 * 1000;
+  var TOKEN_TIMEOUT_MS = 15 * 1000;
 
   var initPromise = null;
+  var refreshPromise = null;
 
   // --- Config and mode ---------------------------------------------------
 
@@ -73,8 +75,9 @@ window.SARI = window.SARI || {};
     return tokens;
   }
 
-  function saveTokens(payload) {
-    var previous = readTokens();
+  // `previous` is only passed by the refresh grant. A fresh authorization code
+  // exchange must never inherit an older identity's refresh token.
+  function saveTokens(payload, previous) {
     var tokens = {
       accessToken: payload.access_token,
       idToken: payload.id_token || "",
@@ -89,6 +92,15 @@ window.SARI = window.SARI || {};
   function clearSession() {
     removeKey(store(), TOKENS_KEY);
     removeKey(store(), FLOW_KEY);
+  }
+
+  // Only clear the session this failure belongs to; a new sign-in may have
+  // replaced it while the request was in flight.
+  function clearIfCurrent(tokens) {
+    var current = readTokens();
+    if (!current || current.refreshToken === (tokens && tokens.refreshToken)) {
+      clearSession();
+    }
   }
 
   // --- Identity ----------------------------------------------------------
@@ -114,6 +126,7 @@ window.SARI = window.SARI || {};
   }
 
   // Display-only identity. Authorization always uses the access token.
+  // These claims are decoded, not verified; never gate access on them.
   function userFrom(tokens) {
     var claims = decodePayload(tokens && tokens.idToken);
     if (!claims) return null;
@@ -150,12 +163,41 @@ window.SARI = window.SARI || {};
   }
 
   function postToken(body) {
-    return fetch(endpoint("/oauth2/token"), {
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var options = {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(body).toString(),
-    }).then(
+    };
+    var timer = null;
+
+    if (controller) {
+      options.signal = controller.signal;
+      // shortcut: no request timeout when AbortController is missing.
+      timer = setTimeout(function () {
+        controller.abort();
+      }, TOKEN_TIMEOUT_MS);
+    }
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    var request;
+    try {
+      request = fetch(endpoint("/oauth2/token"), options);
+    } catch (err) {
+      // A synchronous throw still owns the abort timer.
+      stopTimer();
+      throw err;
+    }
+
+    return request.then(
       function (res) {
+        stopTimer();
         return res
           .json()
           .catch(function () {
@@ -178,12 +220,17 @@ window.SARI = window.SARI || {};
             return payload;
           });
       },
-      function () {
-        var err = new Error(
-          "Could not reach the sign-in service. Check your connection and try again."
+      function (err) {
+        stopTimer();
+        var timedOut = Boolean(controller && err && err.name === "AbortError");
+        var failure = new Error(
+          timedOut
+            ? "The sign-in service did not respond in time. Check your connection and try again."
+            : "Could not reach the sign-in service. Check your connection and try again."
         );
-        err.network = true;
-        throw err;
+        failure.network = true;
+        failure.timeout = timedOut;
+        throw failure;
       }
     );
   }
@@ -192,26 +239,66 @@ window.SARI = window.SARI || {};
     return Number(tokens.expiresAt) - REFRESH_SKEW_MS <= Date.now();
   }
 
+  // A permanent misconfiguration; retrying will not help.
+  function isConfigError(err) {
+    return (
+      err.code === "invalid_client" ||
+      err.code === "unauthorized_client" ||
+      err.code === "invalid_request" ||
+      err.code === "unsupported_grant_type"
+    );
+  }
+
+  // Resolves to one of:
+  //   { status: "ok", tokens }
+  //   { status: "invalid" }     refresh token rejected (invalid_grant)
+  //   { status: "config" }      client/configuration rejected
+  //   { status: "unavailable" } network or server failure; tokens kept
+  //   { status: "stale" }       session was replaced while in flight
   function refreshTokens(tokens) {
-    if (!tokens.refreshToken) {
-      return Promise.resolve({ invalid: true });
+    // Single-flight: concurrent callers share one refresh request.
+    if (refreshPromise) return refreshPromise;
+    if (!tokens || !tokens.refreshToken) return Promise.resolve({ status: "invalid" });
+
+    var request;
+    try {
+      request = postToken({
+        grant_type: "refresh_token",
+        client_id: authConfig().clientId,
+        refresh_token: tokens.refreshToken,
+      });
+    } catch (err) {
+      return Promise.resolve({ status: "unavailable", error: err });
     }
 
-    return postToken({
-      grant_type: "refresh_token",
-      client_id: authConfig().clientId,
-      refresh_token: tokens.refreshToken,
-    }).then(
+    var settled = request.then(
       function (payload) {
-        return { tokens: saveTokens(payload) };
+        var current = readTokens();
+        // A new sign-in replaced the session while this request was in flight.
+        if (!current || current.refreshToken !== tokens.refreshToken) {
+          return { status: "stale" };
+        }
+        return { status: "ok", tokens: saveTokens(payload, tokens) };
       },
       function (err) {
-        // Keep the session through network or server hiccups. Clear it only
-        // when Cognito says the refresh token itself is no longer valid.
-        if (err.code === "invalid_grant") return { invalid: true };
-        return { invalid: false, error: err };
+        if (err.code === "invalid_grant") return { status: "invalid" };
+        if (isConfigError(err)) return { status: "config", error: err };
+        return { status: "unavailable", error: err };
       }
     );
+
+    var shared = settled.then(
+      function (result) {
+        if (refreshPromise === shared) refreshPromise = null;
+        return result;
+      },
+      function (err) {
+        if (refreshPromise === shared) refreshPromise = null;
+        return { status: "unavailable", error: err };
+      }
+    );
+    refreshPromise = shared;
+    return shared;
   }
 
   // --- Callback ----------------------------------------------------------
@@ -231,10 +318,11 @@ window.SARI = window.SARI || {};
     if (!code && !error) return Promise.resolve({ handled: false, error: null });
 
     var flow = readJson(store(), FLOW_KEY);
-    removeKey(store(), FLOW_KEY);
-    stripQuery();
 
     if (error) {
+      // The login attempt is over either way.
+      removeKey(store(), FLOW_KEY);
+      stripQuery();
       return Promise.resolve({
         handled: true,
         error:
@@ -244,12 +332,18 @@ window.SARI = window.SARI || {};
       });
     }
 
+    // Validate the one-time flow before consuming it.
     if (!flow || !flow.verifier || !flow.state || params.get("state") !== flow.state) {
+      stripQuery();
       return Promise.resolve({
         handled: true,
         error: "Sign-in could not be verified. Please try again.",
       });
     }
+
+    // Consume the flow before the exchange so a reload cannot replay the code.
+    removeKey(store(), FLOW_KEY);
+    stripQuery();
 
     return postToken({
       grant_type: "authorization_code",
@@ -259,7 +353,8 @@ window.SARI = window.SARI || {};
       code_verifier: flow.verifier,
     }).then(
       function (payload) {
-        saveTokens(payload);
+        // Never merge a previous identity's refresh token into this one.
+        saveTokens(payload, null);
         return { handled: true, error: null };
       },
       function (err) {
@@ -270,53 +365,151 @@ window.SARI = window.SARI || {};
 
   // --- Public API --------------------------------------------------------
 
+  // init() resolves to { enabled, status, signedIn, user, error }.
+  // status: "signed-in"  a usable access token exists
+  //         "signed-out"  the user must sign in again
+  //         "unavailable" temporary refresh failure; tokens kept, retry later
+  //         "disabled"    mock mode or no auth config
+  function unavailableResult() {
+    return {
+      enabled: true,
+      status: "unavailable",
+      signedIn: false,
+      user: null,
+      error: "Could not refresh your session. Check your connection and try again.",
+    };
+  }
+
   function runInit() {
     if (!isEnabled()) {
-      return Promise.resolve({ enabled: false, signedIn: false, user: null, error: null });
+      return Promise.resolve({
+        enabled: false,
+        status: "disabled",
+        signedIn: false,
+        user: null,
+        error: null,
+      });
     }
 
     return handleCallback().then(function (callback) {
       if (callback.error) {
-        return { enabled: true, signedIn: false, user: null, error: callback.error };
+        return {
+          enabled: true,
+          status: "signed-out",
+          signedIn: false,
+          user: null,
+          error: callback.error,
+        };
       }
 
       var tokens = readTokens();
       if (!tokens) {
-        return { enabled: true, signedIn: false, user: null, error: null };
+        return { enabled: true, status: "signed-out", signedIn: false, user: null, error: null };
       }
 
       if (!needsRefresh(tokens)) {
-        return { enabled: true, signedIn: true, user: userFrom(tokens), error: null };
+        return {
+          enabled: true,
+          status: "signed-in",
+          signedIn: true,
+          user: userFrom(tokens),
+          error: null,
+        };
       }
 
       return refreshTokens(tokens).then(function (result) {
-        if (result.tokens) {
-          return { enabled: true, signedIn: true, user: userFrom(result.tokens), error: null };
-        }
-
-        if (result.invalid) {
-          clearSession();
+        if (result.status === "ok") {
           return {
             enabled: true,
+            status: "signed-in",
+            signedIn: true,
+            user: userFrom(result.tokens),
+            error: null,
+          };
+        }
+
+        if (result.status === "stale") {
+          var current = readTokens();
+          if (!current) {
+            return {
+              enabled: true,
+              status: "signed-out",
+              signedIn: false,
+              user: null,
+              error: null,
+            };
+          }
+          if (!needsRefresh(current)) {
+            return {
+              enabled: true,
+              status: "signed-in",
+              signedIn: true,
+              user: userFrom(current),
+              error: null,
+            };
+          }
+          return unavailableResult();
+        }
+
+        if (result.status === "invalid") {
+          clearIfCurrent(tokens);
+          return {
+            enabled: true,
+            status: "signed-out",
             signedIn: false,
             user: null,
             error: "Your session has expired. Please sign in again.",
           };
         }
 
-        // Temporary failure: keep the stored session so a later retry can succeed.
-        return {
-          enabled: true,
-          signedIn: true,
-          user: userFrom(tokens),
-          error: "Could not refresh your session. Check your connection and try again.",
-        };
+        if (result.status === "config") {
+          clearIfCurrent(tokens);
+          return {
+            enabled: true,
+            status: "signed-out",
+            signedIn: false,
+            user: null,
+            error: "Sign-in is not configured correctly. Contact the site owner.",
+          };
+        }
+
+        // Temporary failure: keep the tokens, but do not pretend the admin is usable.
+        return unavailableResult();
       });
     });
   }
 
+  function initFailure(err) {
+    return {
+      enabled: true,
+      status: "unavailable",
+      signedIn: false,
+      user: null,
+      error: (err && err.message) || "Could not start sign-in. Please try again.",
+    };
+  }
+
   function init() {
-    if (!initPromise) initPromise = runInit();
+    if (!initPromise) {
+      var started;
+      try {
+        started = runInit();
+      } catch (err) {
+        // A synchronous throw must not escape init(); the next call retries.
+        return Promise.resolve(initFailure(err));
+      }
+      initPromise = started.then(
+        function (result) {
+          // Do not cache a temporary failure; the next init() retries.
+          if (result.status === "unavailable") initPromise = null;
+          return result;
+        },
+        function (err) {
+          initPromise = null;
+          return initFailure(err);
+        }
+      );
+    }
     return initPromise;
   }
 
@@ -335,6 +528,11 @@ window.SARI = window.SARI || {};
         new Error("Sign-in needs a secure context. Use http://localhost:8123 or HTTPS.")
       );
     }
+
+    // Never carry a previous identity's tokens or PKCE flow into a new login.
+    clearSession();
+    refreshPromise = null;
+    initPromise = null;
 
     var config = authConfig();
     var verifier = randomString(32);
@@ -362,6 +560,8 @@ window.SARI = window.SARI || {};
 
   function signOut() {
     clearSession();
+    refreshPromise = null;
+    initPromise = null;
     if (!isEnabled()) return;
 
     var config = authConfig();
@@ -380,12 +580,17 @@ window.SARI = window.SARI || {};
     if (!needsRefresh(tokens)) return Promise.resolve(tokens.accessToken);
 
     return refreshTokens(tokens).then(function (result) {
-      if (result.tokens) return result.tokens.accessToken;
-      if (result.invalid) {
-        clearSession();
-        return null;
+      if (result.status === "ok") return result.tokens.accessToken;
+
+      if (result.status === "stale") {
+        var current = readTokens();
+        return current && !needsRefresh(current) ? current.accessToken : null;
       }
-      // Temporary failure: the stored session is kept; the next call retries.
+
+      if (result.status === "invalid" || result.status === "config") {
+        clearIfCurrent(tokens);
+      }
+      // Temporary failures keep the stored session; the next call retries.
       return null;
     });
   }
