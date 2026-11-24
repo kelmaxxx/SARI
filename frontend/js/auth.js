@@ -98,7 +98,9 @@ window.SARI = window.SARI || {};
   // replaced it while the request was in flight.
   function clearIfCurrent(tokens) {
     var current = readTokens();
-    if (!current || current.refreshToken === (tokens && tokens.refreshToken)) {
+    // Nothing of this session remains; a newer sign-in may own the stored flow.
+    if (!current) return;
+    if (current.refreshToken === (tokens && tokens.refreshToken)) {
       clearSession();
     }
   }
