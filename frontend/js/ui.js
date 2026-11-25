@@ -85,12 +85,20 @@ window.SARI = window.SARI || {};
     }, 3600);
   };
 
-  // Header border appears only once the page scrolls.
+  // Header border appears once the page scrolls; it hides on scroll down and
+  // returns on scroll up.
   document.addEventListener("DOMContentLoaded", function () {
     var header = document.querySelector("[data-header]");
     if (header) {
+      var lastY = window.scrollY;
       var onScroll = function () {
-        header.classList.toggle("is-scrolled", window.scrollY > 8);
+        var y = window.scrollY;
+        header.classList.toggle("is-scrolled", y > 8);
+        // Ignore tiny movements so the bar does not flicker.
+        if (Math.abs(y - lastY) > 6) {
+          header.classList.toggle("is-hidden", y > lastY && y > 120);
+          lastY = y;
+        }
       };
       onScroll();
       window.addEventListener("scroll", onScroll, { passive: true });

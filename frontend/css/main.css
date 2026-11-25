@@ -330,7 +330,18 @@ textarea {
   /* Transparent over the hero; a scrim keeps the brand readable as letters pass behind. */
   background: var(--header-scrim);
   border-bottom: 0;
-  transition: background-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  transition: transform 0.3s var(--ease), background-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+/* Hidden on scroll down, back on scroll up (ui.js). */
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+/* Never leave keyboard focus inside the slid-away bar. */
+.site-header.is-hidden:focus-within {
+  transform: none;
 }
 
 .site-header.is-scrolled {
@@ -650,8 +661,8 @@ textarea {
 
 .catalog-glass {
   min-height: var(--hero-h);
-  /* Clear the sticky header once the sheet has fully arrived. */
-  padding-top: calc(var(--header-h) + clamp(20px, 3vw, 32px));
+  max-width: 1400px;
+  padding-top: clamp(18px, 2.5vw, 28px);
   padding-bottom: clamp(48px, 7vw, 88px);
   border: 1px solid var(--line);
   border-radius: 30px;
@@ -1568,7 +1579,7 @@ textarea {
 .footer-watermark {
   position: absolute;
   right: -6%;
-  bottom: -34%;
+  bottom: -20%;
   width: min(880px, 92%);
   height: auto;
   opacity: 0.07;
