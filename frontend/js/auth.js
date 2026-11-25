@@ -21,7 +21,8 @@ window.SARI = window.SARI || {};
   var authEpoch = 0;
   // NEW_PASSWORD_REQUIRED continuation; memory only, never storage.
   var pendingUser = null;
-  var pendingRequiredAttributes = null;
+  // True while completeNewPasswordChallenge is in flight.
+  var completing = false;
 
   // --- Config and mode ---------------------------------------------------
 
@@ -185,7 +186,7 @@ window.SARI = window.SARI || {};
   // sign-out, failure, or a new attempt.
   function clearPendingChallenge() {
     pendingUser = null;
-    pendingRequiredAttributes = null;
+    completing = false;
   }
 
   // Only clear the session this failure belongs to; a new sign-in may have
@@ -393,7 +394,8 @@ window.SARI = window.SARI || {};
       status: "challenge",
       signedIn: false,
       challenge: name,
-      requiredAttributes: requiredAttributes || [],
+      // Copy so a caller cannot mutate the challenge state.
+      requiredAttributes: (requiredAttributes || []).slice(),
       user: null,
       error: null,
     };
@@ -482,20 +484,21 @@ window.SARI = window.SARI || {};
   }
 
   function signIn(username, password) {
-    var epoch = ++authEpoch;
-    clearPendingChallenge();
-
     if (!isEnabled()) {
       return Promise.reject(
         new Error("Sign-in is not configured for this site. Contact the site owner.")
       );
     }
 
-    // Trim the username; the password is passed through untouched.
+    // Validate before touching state: a bad call must not cancel a pending
+    // password change or invalidate in-flight callbacks.
     var name = username == null ? "" : String(username).trim();
     if (!name || typeof password !== "string" || password === "") {
       return Promise.reject(new Error("Enter your username and password to sign in."));
     }
+
+    var epoch = ++authEpoch;
+    clearPendingChallenge();
 
     var pool;
     var storage;
@@ -550,8 +553,7 @@ window.SARI = window.SARI || {};
           }
           // Keep the instance: its in-memory Session is the challenge.
           pendingUser = user;
-          pendingRequiredAttributes = requiredAttributes || [];
-          resolve(challengeResult("NEW_PASSWORD_REQUIRED", pendingRequiredAttributes));
+          resolve(challengeResult("NEW_PASSWORD_REQUIRED", requiredAttributes));
         },
         mfaRequired: function (challengeName) {
           if (epoch !== authEpoch) {
@@ -605,78 +607,114 @@ window.SARI = window.SARI || {};
         new Error("No password change is in progress. Sign in again.")
       );
     }
+    if (completing) {
+      return Promise.reject(new Error("A password change is already in progress."));
+    }
     if (typeof newPassword !== "string" || newPassword === "") {
       return Promise.reject(new Error("Enter a new password."));
     }
 
     var epoch = authEpoch;
     var attributes = attributeValues || {};
+    completing = true;
 
     return new Promise(function (resolve, reject) {
-      // 6.3.22 signature: (newPassword, requiredAttributeData, callback, clientMetadata).
-      user.completeNewPasswordChallenge(newPassword, attributes, {
-        onSuccess: function (session) {
-          if (epoch !== authEpoch) {
-            clearSdkSession(store());
-            resolve(staleResult());
-            return;
-          }
+      var settled = false;
+      function ok(value) {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      }
+      function fail(err) {
+        if (settled) return;
+        settled = true;
+        reject(err);
+      }
+
+      try {
+        // 6.3.22 signature: (newPassword, requiredAttributeData, callback, clientMetadata).
+        user.completeNewPasswordChallenge(newPassword, attributes, {
+          onSuccess: function (session) {
+            if (epoch !== authEpoch) {
+              clearSdkSession(store());
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            try {
+              ok(finishSignIn(session));
+            } catch (err) {
+              fail(err);
+            }
+          },
+          onFailure: function (err) {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            fail(signInError(err));
+          },
+          newPasswordRequired: function (userAttributes, requiredAttributes) {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            // The SDK stored the new challenge Session on the same user.
+            completing = false;
+            ok(challengeResult("NEW_PASSWORD_REQUIRED", requiredAttributes));
+          },
+          mfaRequired: function (challengeName) {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            ok(unsupportedChallenge(challengeName || "SMS_MFA"));
+          },
+          totpRequired: function () {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            ok(unsupportedChallenge("SOFTWARE_TOKEN_MFA"));
+          },
+          customChallenge: function () {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            ok(unsupportedChallenge("CUSTOM_CHALLENGE"));
+          },
+          selectMFAType: function () {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            ok(unsupportedChallenge("SELECT_MFA_TYPE"));
+          },
+          mfaSetup: function () {
+            if (epoch !== authEpoch) {
+              ok(staleResult());
+              return;
+            }
+            clearPendingChallenge();
+            ok(unsupportedChallenge("MFA_SETUP"));
+          },
+        });
+      } catch (err) {
+        if (!settled) {
           clearPendingChallenge();
-          try {
-            resolve(finishSignIn(session));
-          } catch (err) {
-            reject(err);
-          }
-        },
-        onFailure: function (err) {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          reject(signInError(err));
-        },
-        mfaRequired: function (challengeName) {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          resolve(unsupportedChallenge(challengeName || "SMS_MFA"));
-        },
-        totpRequired: function () {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          resolve(unsupportedChallenge("SOFTWARE_TOKEN_MFA"));
-        },
-        customChallenge: function () {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          resolve(unsupportedChallenge("CUSTOM_CHALLENGE"));
-        },
-        selectMFAType: function () {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          resolve(unsupportedChallenge("SELECT_MFA_TYPE"));
-        },
-        mfaSetup: function () {
-          if (epoch !== authEpoch) {
-            resolve(staleResult());
-            return;
-          }
-          clearPendingChallenge();
-          resolve(unsupportedChallenge("MFA_SETUP"));
-        },
-      });
+          fail(
+            new Error(
+              "Could not start the password change. Sign in again and try again."
+            )
+          );
+        }
+      }
     });
   }
 

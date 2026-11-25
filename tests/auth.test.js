@@ -154,6 +154,25 @@ function installSdk(window) {
       return;
     }
 
+    if (newPassword === "rechallenge") {
+      this.Session = "second-challenge-session";
+      callbacks.newPasswordRequired({ email: "admin@example.com" }, ["email"]);
+      return;
+    }
+
+    if (newPassword === "throw") {
+      throw new Error("boom");
+    }
+
+    if (newPassword === "slow-complete" || newPassword === "slow-fail") {
+      window.__pendingComplete = {
+        user: this,
+        callbacks,
+        session: makeSession(this.username),
+      };
+      return;
+    }
+
     const session = makeSession(this.username);
     this.cacheTokens(session);
     callbacks.onSuccess(session);
@@ -388,4 +407,156 @@ test("unsupported challenges write no tokens", async () => {
   assert.deepEqual(sdkKeys(env.sessionStorage), []);
   assert.deepEqual(sdkKeys(env.localStorage), []);
   assert.equal(env.auth.isSignedIn(), false);
+});
+
+test("a re-challenge during completeNewPassword resolves and keeps the pending user", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  const again = await env.auth.completeNewPassword("rechallenge", {
+    email: "admin@example.com",
+  });
+
+  assert.equal(again.status, "challenge");
+  assert.equal(again.challenge, "NEW_PASSWORD_REQUIRED");
+  assert.deepEqual(again.requiredAttributes, ["email"]);
+  assert.equal(again.signedIn, false);
+  assert.equal(env.created.length, 1);
+
+  const done = await env.auth.completeNewPassword("N3w-Password!", {
+    email: "admin@example.com",
+  });
+
+  assert.equal(done.status, "signed-in");
+  assert.equal(env.created.length, 1);
+  assert.equal(env.created[0].completeCalls.length, 2);
+  assert.equal(env.created[0].completeCalls[1].session, "second-challenge-session");
+  assert.equal(
+    JSON.parse(env.sessionStorage.getItem("sari.auth.tokens")).accessToken,
+    "access-token-first-timer"
+  );
+  assert.deepEqual(sdkKeys(env.sessionStorage), []);
+  assert.deepEqual(sdkKeys(env.localStorage), []);
+});
+
+test("a synchronous throw from the SDK clears the pending challenge", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  await assert.rejects(
+    env.auth.completeNewPassword("throw", {}),
+    /password change/i
+  );
+  await assert.rejects(
+    env.auth.completeNewPassword("Another-Pass1!", {}),
+    /no password change is in progress/i
+  );
+  assert.equal(env.created[0].completeCalls.length, 1);
+});
+
+test("an invalid signIn leaves a pending password challenge intact", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  await assert.rejects(env.auth.signIn("", ""), /username and password/i);
+
+  const done = await env.auth.completeNewPassword("N3w-Password!", {
+    email: "admin@example.com",
+  });
+
+  assert.equal(done.status, "signed-in");
+  assert.equal(env.created.length, 1);
+});
+
+test("a double submit sends only one password-change request", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  const first = env.auth.completeNewPassword("slow-complete", {
+    email: "admin@example.com",
+  });
+  const pending = env.window.__pendingComplete;
+  assert.ok(pending, "stub should hold the slow password change");
+
+  await assert.rejects(
+    env.auth.completeNewPassword("Second-Pass1!", {
+      email: "admin@example.com",
+    }),
+    /already in progress/i
+  );
+  assert.equal(env.created[0].completeCalls.length, 1);
+
+  pending.user.cacheTokens(pending.session);
+  pending.callbacks.onSuccess(pending.session);
+
+  const done = await first;
+  assert.equal(done.status, "signed-in");
+  assert.deepEqual(sdkKeys(env.sessionStorage), []);
+});
+
+test("a late onSuccess after signOut does not disturb a newer session", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  const pendingResult = env.auth.completeNewPassword("slow-complete", {});
+  const pending = env.window.__pendingComplete;
+  assert.ok(pending, "stub should hold the slow password change");
+
+  env.auth.signOut();
+  const bob = await env.auth.signIn("bob", "correct");
+  assert.equal(bob.status, "signed-in");
+
+  // The real SDK caches tokens before it calls onSuccess.
+  pending.user.cacheTokens(pending.session);
+  pending.callbacks.onSuccess(pending.session);
+
+  const result = await pendingResult;
+  assert.equal(result.status, "stale");
+  assert.equal(result.signedIn, false);
+  assert.equal(
+    JSON.parse(env.sessionStorage.getItem("sari.auth.tokens")).accessToken,
+    "access-token-bob"
+  );
+  assert.deepEqual(sdkKeys(env.sessionStorage), []);
+  assert.deepEqual(sdkKeys(env.localStorage), []);
+});
+
+test("a late onFailure after signOut does not disturb a newer session", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  const pendingResult = env.auth.completeNewPassword("slow-fail", {});
+  const pending = env.window.__pendingComplete;
+  assert.ok(pending, "stub should hold the slow password change");
+
+  env.auth.signOut();
+  const bob = await env.auth.signIn("bob", "correct");
+  assert.equal(bob.status, "signed-in");
+
+  pending.callbacks.onFailure(new Error("late failure"));
+
+  const result = await pendingResult;
+  assert.equal(result.status, "stale");
+  assert.equal(result.signedIn, false);
+  assert.equal(
+    JSON.parse(env.sessionStorage.getItem("sari.auth.tokens")).accessToken,
+    "access-token-bob"
+  );
+  assert.deepEqual(sdkKeys(env.sessionStorage), []);
+  assert.deepEqual(sdkKeys(env.localStorage), []);
+});
+
+test("attributeValues reach completeNewPasswordChallenge unchanged", async () => {
+  const env = createEnv();
+  await env.auth.signIn("first-timer", "needs-new-password");
+
+  await env.auth.completeNewPassword("N3w-Password!", {
+    email: "admin@example.com",
+    name: "Admin",
+  });
+
+  assert.deepEqual(env.created[0].completeCalls[0].attributes, {
+    email: "admin@example.com",
+    name: "Admin",
+  });
 });
