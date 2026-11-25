@@ -54,6 +54,43 @@
       <h3 id="admin-auth-title">Sign in to manage products</h3>
       <p id="admin-auth-message" aria-live="polite"></p>
       <button type="button" class="btn btn-primary" id="admin-auth-action">Sign in</button>
+
+      <form id="admin-auth-form" class="auth-form" novalidate>
+        <div class="field">
+          <label for="admin-username">Username</label>
+          <input id="admin-username" name="username" type="text" autocomplete="username">
+          <p class="field-error" id="admin-username-error"></p>
+        </div>
+
+        <div class="field">
+          <label for="admin-password">Password</label>
+          <input id="admin-password" name="password" type="password" autocomplete="current-password">
+          <p class="field-error" id="admin-password-error"></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="admin-auth-submit">Sign in</button>
+      </form>
+
+      <form id="admin-challenge-form" class="auth-form" novalidate hidden>
+        <h4 class="auth-title">Set a new password to continue</h4>
+
+        <div class="field">
+          <label for="admin-new-password">New password</label>
+          <input id="admin-new-password" name="newPassword" type="password" autocomplete="new-password">
+        </div>
+
+        <div class="field">
+          <label for="admin-confirm-password">Confirm password</label>
+          <input id="admin-confirm-password" name="confirmPassword" type="password" autocomplete="new-password">
+        </div>
+
+        <div id="admin-required-attrs"></div>
+
+        <p class="field-error" id="admin-challenge-message" aria-live="polite"></p>
+
+        <button type="submit" class="btn btn-primary" id="admin-challenge-submit">Set password</button>
+        <button type="button" class="btn btn-ghost auth-back" id="admin-challenge-back">Back to sign in</button>
+      </form>
     </section>
 
     <div id="admin-content" hidden>
@@ -202,12 +239,12 @@
   <div class="toast-host" id="toast-host" aria-live="polite"></div>
 
   <script src="js/vendor/lucide.min.js"></script>
-  <script src="js/config.js?v=2"></script>
+  <script src="js/config.js?v=3"></script>
   <script src="js/vendor/amazon-cognito-identity.min.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/auth.js?v=2"></script>
   <script src="js/mock-data.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/api.js?v=2"></script>
-  <script src="js/admin.js?v=3"></script>
+  <script src="js/admin.js?v=4"></script>
 </body>
 </html>

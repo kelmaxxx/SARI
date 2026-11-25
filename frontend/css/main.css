@@ -1452,6 +1452,43 @@ textarea {
   min-width: 0;
 }
 
+/* ---------- Auth form ---------- */
+.auth-form {
+  width: min(360px, 100%);
+  margin: 0 auto;
+  text-align: left;
+}
+
+/* Reused form messages must outrank the .state p rule. */
+.auth-form .field-error,
+.auth-form .field-hint {
+  max-width: none;
+  margin: 5px 0 0;
+  font-size: 12px;
+}
+
+.auth-form .field-error {
+  color: var(--danger);
+}
+
+.auth-form .field-hint {
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.auth-form .auth-title {
+  margin-bottom: 14px;
+  font-size: 1rem;
+}
+
+.auth-form .btn {
+  width: 100%;
+}
+
+.auth-form .auth-back {
+  margin-top: 10px;
+}
+
 /* ---------- Toast ---------- */
 .toast-host {
   position: fixed;

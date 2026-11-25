@@ -10,6 +10,10 @@
     image: { file: null, url: "", key: "" },
   };
   var els = {};
+  var adminStarted = false;
+  // NEW_PASSWORD_REQUIRED attribute names from the last sign-in attempt.
+  // Memory only: a reload drops them and the user signs in again.
+  var pendingRequiredAttributes = [];
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -41,7 +45,21 @@
     els.authAction = document.getElementById("admin-auth-action");
     els.content = document.getElementById("admin-content");
 
+    els.authForm = document.getElementById("admin-auth-form");
+    els.username = document.getElementById("admin-username");
+    els.password = document.getElementById("admin-password");
+    els.usernameError = document.getElementById("admin-username-error");
+    els.passwordError = document.getElementById("admin-password-error");
+    els.authSubmit = document.getElementById("admin-auth-submit");
+    els.challengeForm = document.getElementById("admin-challenge-form");
+    els.newPassword = document.getElementById("admin-new-password");
+    els.confirmPassword = document.getElementById("admin-confirm-password");
+    els.requiredAttrs = document.getElementById("admin-required-attrs");
+    els.challengeMessage = document.getElementById("admin-challenge-message");
+
     if (!els.rows) return;
+
+    els.authForm.addEventListener("submit", submitCredentials);
 
     var auth;
     try {
@@ -91,7 +109,10 @@
     els.authMessage.textContent = auth.error || "";
     els.authAction.disabled = false;
 
+    clearAuthForms();
+
     if (auth.status === "config") {
+      showActionOnly();
       els.authAction.textContent = "Reload";
       els.authAction.onclick = function () {
         window.location.reload();
@@ -99,41 +120,139 @@
       return;
     }
 
-    var retry = auth.status === "unavailable";
-    els.authAction.textContent = retry ? "Try again" : "Sign in";
-
-    els.authAction.onclick = async function () {
-      if (!retry) {
+    if (auth.status === "unavailable") {
+      showActionOnly();
+      els.authAction.textContent = "Try again";
+      els.authAction.onclick = async function () {
         els.authAction.disabled = true;
-        SARI.auth.signIn().catch(function (err) {
-          els.authAction.disabled = false;
-          els.authMessage.textContent =
-            (err && err.message) || "Sign-in could not start. Please try again.";
-        });
-        return;
-      }
+        els.auth.hidden = true;
+        els.loading.hidden = false;
 
-      els.authAction.disabled = true;
+        var next;
+        try {
+          next = await SARI.auth.init();
+        } catch (err) {
+          next = authFailure(err);
+        }
+
+        var gate = gateFor(next);
+        if (gate) {
+          showGate(gate);
+        } else {
+          await startAdmin();
+        }
+      };
+      return;
+    }
+
+    // Signed out: the custom credentials form owns the gate.
+    els.authAction.hidden = true;
+    els.authAction.onclick = null;
+    els.authForm.hidden = false;
+    els.challengeForm.hidden = true;
+    els.username.focus();
+  }
+
+  function showActionOnly() {
+    els.authAction.hidden = false;
+    els.authForm.hidden = true;
+    els.challengeForm.hidden = true;
+  }
+
+  // Reset every auth control whenever the gate is shown.
+  function clearAuthForms() {
+    els.password.value = "";
+    els.usernameError.textContent = "";
+    els.passwordError.textContent = "";
+    els.username.removeAttribute("aria-invalid");
+    els.password.removeAttribute("aria-invalid");
+    els.newPassword.value = "";
+    els.confirmPassword.value = "";
+    els.requiredAttrs.innerHTML = "";
+    els.challengeMessage.textContent = "";
+    els.authSubmit.disabled = false;
+    els.authSubmit.textContent = "Sign in";
+  }
+
+  async function submitCredentials(event) {
+    event.preventDefault();
+
+    var username = els.username.value.trim();
+    var password = els.password.value;
+
+    els.authMessage.textContent = "";
+    els.usernameError.textContent = "";
+    els.passwordError.textContent = "";
+    els.username.removeAttribute("aria-invalid");
+    els.password.removeAttribute("aria-invalid");
+
+    if (!username) {
+      els.usernameError.textContent = "Enter your username.";
+      els.username.setAttribute("aria-invalid", "true");
+    }
+    if (!password) {
+      els.passwordError.textContent = "Enter your password.";
+      els.password.setAttribute("aria-invalid", "true");
+    }
+    if (!username) {
+      els.username.focus();
+      return;
+    }
+    if (!password) {
+      els.password.focus();
+      return;
+    }
+
+    els.authSubmit.disabled = true;
+    els.authSubmit.textContent = "Signing in...";
+
+    try {
+      var result = await SARI.auth.signIn(username, password);
+      handleSignInResult(result);
+    } catch (err) {
+      els.authMessage.textContent =
+        (err && err.message) || "Sign-in failed. Please try again.";
+      els.password.value = "";
+    } finally {
+      els.authSubmit.disabled = false;
+      els.authSubmit.textContent = "Sign in";
+    }
+  }
+
+  function handleSignInResult(result) {
+    if (result.status === "signed-in") {
+      els.password.value = "";
       els.auth.hidden = true;
-      els.loading.hidden = false;
+      startAdmin();
+      return;
+    }
 
-      var next;
-      try {
-        next = await SARI.auth.init();
-      } catch (err) {
-        next = authFailure(err);
-      }
+    if (result.status === "challenge") {
+      pendingRequiredAttributes = (result.requiredAttributes || []).slice();
+      // TODO(Phase 5 Step 4): render inputs for pendingRequiredAttributes and
+      // call SARI.auth.completeNewPassword() from the challenge form.
+      els.password.value = "";
+      els.authForm.hidden = true;
+      els.challengeForm.hidden = false;
+      els.newPassword.focus();
+      return;
+    }
 
-      var gate = gateFor(next);
-      if (gate) {
-        showGate(gate);
-      } else {
-        await startAdmin();
-      }
-    };
+    if (result.status === "unsupported-challenge") {
+      els.authMessage.textContent =
+        result.error ||
+        "This account needs an extra verification step that this page does not support yet.";
+      return;
+    }
+
+    if (result.status === "stale") {
+      els.authMessage.textContent = "Sign-in was interrupted. Please try again.";
+    }
   }
 
   async function startAdmin() {
+    if (adminStarted) return;
+    adminStarted = true;
     els.loading.hidden = true;
     els.auth.hidden = true;
     els.content.hidden = false;
