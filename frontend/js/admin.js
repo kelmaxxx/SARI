@@ -20,6 +20,7 @@
     els.count = document.getElementById("admin-count");
     els.search = document.getElementById("admin-search");
     els.addButton = document.getElementById("add-product");
+    els.signOut = document.getElementById("sign-out");
 
     els.dialog = document.getElementById("product-dialog");
     els.form = document.getElementById("product-form");
@@ -137,10 +138,17 @@
     els.auth.hidden = true;
     els.content.hidden = false;
     els.addButton.hidden = false;
+    if (els.signOut) els.signOut.hidden = false;
 
     els.addButton.addEventListener("click", function () {
       openForm(null);
     });
+
+    if (els.signOut) {
+      els.signOut.addEventListener("click", function () {
+        SARI.auth.signOut();
+      });
+    }
 
     els.search.addEventListener(
       "input",
