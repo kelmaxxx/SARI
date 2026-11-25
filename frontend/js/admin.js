@@ -61,6 +61,14 @@
 
     els.authForm.addEventListener("submit", submitCredentials);
 
+    // Show/hide toggles for every password field in the sign-in gate.
+    document.addEventListener("click", function (event) {
+      var toggle = event.target.closest("[data-password-toggle]");
+      if (!toggle) return;
+      setPasswordVisibility(toggle, toggle.getAttribute("aria-pressed") !== "true");
+      SARI.refreshIcons();
+    });
+
     var auth;
     try {
       auth = await SARI.auth.init();
@@ -172,6 +180,20 @@
     els.challengeMessage.textContent = "";
     els.authSubmit.disabled = false;
     els.authSubmit.textContent = "Sign in";
+    document.querySelectorAll("[data-password-toggle]").forEach(function (toggle) {
+      setPasswordVisibility(toggle, false);
+    });
+    SARI.refreshIcons();
+  }
+
+  // `toggle` sits next to its input inside a .password-field wrapper.
+  function setPasswordVisibility(toggle, show) {
+    var input = toggle.parentNode.querySelector("input");
+    input.type = show ? "text" : "password";
+    toggle.setAttribute("aria-pressed", show ? "true" : "false");
+    toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    toggle.innerHTML =
+      '<i data-lucide="' + (show ? "eye-off" : "eye") + '" aria-hidden="true"></i>';
   }
 
   async function submitCredentials(event) {

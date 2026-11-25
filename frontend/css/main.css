@@ -903,6 +903,38 @@ textarea {
   margin-block: 48px 72px;
 }
 
+/* Sign-in gate: a contained panel, not a dashed empty-state box. */
+.state.auth-card {
+  width: min(520px, 100%);
+  margin: 0 auto 72px;
+  padding: clamp(30px, 5vw, 44px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    radial-gradient(140% 90% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 60%),
+    var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-card h3 {
+  margin-top: 16px;
+  font-size: 1.3rem;
+}
+
+.auth-card .state-icon {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.auth-card #admin-auth-message:empty {
+  display: none;
+}
+
+.auth-card #admin-auth-message:not(:empty) {
+  margin: 0 0 18px;
+  color: var(--danger);
+  font-size: 13.5px;
+}
+
 .state-icon {
   display: grid;
   place-items: center;
@@ -1124,8 +1156,9 @@ textarea {
   grid-template-columns: minmax(220px, 340px) 1fr;
   align-items: center;
   gap: 16px;
-  padding: 16px 0;
-  border-top: 1px solid var(--line);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--cream);
 }
 
 .admin-toolbar .results {
@@ -1137,6 +1170,11 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.table-scroll {
+  overflow-x: auto;
 }
 
 .product-table {
@@ -1470,6 +1508,47 @@ textarea {
   text-align: left;
 }
 
+.auth-card .auth-form {
+  width: 100%;
+  max-width: 380px;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 46px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.password-toggle:hover {
+  background: var(--cream-deep);
+  color: var(--ink);
+}
+
+.password-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
 /* Reused form messages must outrank the .state p rule. */
 .auth-form .field-error,
 .auth-form .field-hint {
@@ -1710,10 +1789,6 @@ textarea {
   .product-table th:nth-child(2),
   .product-table td:nth-child(2) {
     display: none;
-  }
-
-  .table-card {
-    overflow-x: auto;
   }
 
   .brand-logo {

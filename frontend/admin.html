@@ -49,7 +49,7 @@
       <span>Checking your sign-in…</span>
     </div>
 
-    <section class="state state-wide" id="admin-auth" hidden aria-labelledby="admin-auth-title">
+    <section class="state state-wide auth-card" id="admin-auth" hidden aria-labelledby="admin-auth-title">
       <span class="state-icon"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span>
       <h3 id="admin-auth-title">Sign in to manage products</h3>
       <p id="admin-auth-message" aria-live="polite"></p>
@@ -58,13 +58,18 @@
       <form id="admin-auth-form" class="auth-form" novalidate>
         <div class="field">
           <label for="admin-username">Username</label>
-          <input id="admin-username" name="username" type="text" autocomplete="username">
+          <input id="admin-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="admin-username-error">
           <p class="field-error" id="admin-username-error"></p>
         </div>
 
         <div class="field">
           <label for="admin-password">Password</label>
-          <input id="admin-password" name="password" type="password" autocomplete="current-password">
+          <div class="password-field">
+            <input id="admin-password" name="password" type="password" autocomplete="current-password" aria-describedby="admin-password-error">
+            <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+              <i data-lucide="eye" aria-hidden="true"></i>
+            </button>
+          </div>
           <p class="field-error" id="admin-password-error"></p>
         </div>
 
@@ -76,12 +81,22 @@
 
         <div class="field">
           <label for="admin-new-password">New password</label>
-          <input id="admin-new-password" name="newPassword" type="password" autocomplete="new-password">
+          <div class="password-field">
+            <input id="admin-new-password" name="newPassword" type="password" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+              <i data-lucide="eye" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
 
         <div class="field">
           <label for="admin-confirm-password">Confirm password</label>
-          <input id="admin-confirm-password" name="confirmPassword" type="password" autocomplete="new-password">
+          <div class="password-field">
+            <input id="admin-confirm-password" name="confirmPassword" type="password" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+              <i data-lucide="eye" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
 
         <div id="admin-required-attrs"></div>
@@ -94,29 +109,31 @@
     </section>
 
     <div id="admin-content" hidden>
-      <div class="admin-toolbar">
-        <div class="search">
-          <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
-          <label class="visually-hidden" for="admin-search">Search products</label>
-          <input id="admin-search" type="search" placeholder="Search by name or category" autocomplete="off">
-        </div>
-        <p class="results" id="admin-count" aria-live="polite"></p>
-      </div>
-
       <div class="table-card">
-        <table class="product-table" id="product-table">
-          <caption class="visually-hidden">All products in the catalog</caption>
-          <thead>
-            <tr>
-              <th scope="col">Product</th>
-              <th scope="col">Category</th>
-              <th scope="col">Price</th>
-              <th scope="col">Updated</th>
-              <th scope="col"><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="product-rows"></tbody>
-        </table>
+        <div class="admin-toolbar">
+          <div class="search">
+            <i data-lucide="search" class="search-icon" aria-hidden="true"></i>
+            <label class="visually-hidden" for="admin-search">Search products</label>
+            <input id="admin-search" type="search" placeholder="Search by name or category" autocomplete="off">
+          </div>
+          <p class="results" id="admin-count" aria-live="polite"></p>
+        </div>
+
+        <div class="table-scroll">
+          <table class="product-table" id="product-table">
+            <caption class="visually-hidden">All products in the catalog</caption>
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Category</th>
+                <th scope="col">Price</th>
+                <th scope="col">Updated</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="product-rows"></tbody>
+          </table>
+        </div>
 
         <div class="admin-empty" id="admin-empty" hidden>
           <span class="state-icon"><i data-lucide="package-open" aria-hidden="true"></i></span>
@@ -249,6 +266,6 @@
   <script src="js/mock-data.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/api.js?v=2"></script>
-  <script src="js/admin.js?v=4"></script>
+  <script src="js/admin.js?v=5"></script>
 </body>
 </html>
