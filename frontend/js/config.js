@@ -6,6 +6,7 @@ window.SARI_CONFIG = {
 
   // Amazon Cognito hosted UI. Public SPA client: no client secret exists.
   auth: {
+    userPoolId: "ap-northeast-1_yEBwYtgNE",
     clientId: "6ssbujsi5lq2bp90m00fjp2oh3",
     domain: "https://ap-northeast-1yebwytgne.auth.ap-northeast-1.amazoncognito.com",
     redirectUri: "http://localhost:8123/admin.html",
