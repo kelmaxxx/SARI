@@ -1552,17 +1552,45 @@ textarea {
 
 /* ---------- Footer ---------- */
 .site-footer {
+  position: relative;
+  overflow: hidden;
   margin-top: clamp(48px, 7vw, 80px);
   padding-block: 52px 44px;
   background: var(--inverse-bg);
   color: var(--inverse-ink);
 }
 
+.site-footer > .container {
+  position: relative;
+  z-index: 1;
+}
+
+.footer-watermark {
+  position: absolute;
+  right: -6%;
+  bottom: -34%;
+  width: min(880px, 92%);
+  height: auto;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
 .footer-inner {
   display: grid;
-  grid-template-columns: 1.5fr auto 1fr;
+  grid-template-columns: 1.5fr auto;
   gap: 40px 56px;
   align-items: start;
+}
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(248, 244, 234, 0.14);
 }
 
 .site-footer .brand-logo {
@@ -1594,13 +1622,11 @@ textarea {
 
 .footer-meta {
   display: grid;
-  gap: 8px;
-  justify-self: end;
-  max-width: 30ch;
+  gap: 6px;
+  max-width: 46ch;
   color: rgba(248, 244, 234, 0.5);
   font-size: 12px;
   line-height: 1.6;
-  text-align: right;
 }
 
 /* ---------- Responsive ---------- */
@@ -1636,14 +1662,11 @@ textarea {
   }
 
   .footer-inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
-  .footer-meta {
-    grid-column: 1 / -1;
-    justify-self: start;
-    max-width: none;
-    text-align: left;
+  .footer-bottom {
+    align-items: flex-start;
   }
 }
 
