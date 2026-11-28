@@ -1151,6 +1151,59 @@ textarea {
   font-size: 14.5px;
 }
 
+/* Catalog summary: hairline-divided cells, one accent number. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  margin: 0 0 24px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat {
+  padding: 17px 20px 19px;
+  background: var(--white);
+}
+
+.stat dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat dt svg {
+  width: 14px;
+  height: 14px;
+  color: var(--forest-700);
+}
+
+.stat dd {
+  margin: 10px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.15rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.stat-featured dd {
+  color: var(--clay);
+}
+
+.stat dd.stat-date {
+  font-size: 1.3rem;
+  letter-spacing: 0;
+}
+
 .admin-toolbar {
   display: grid;
   grid-template-columns: minmax(220px, 340px) 1fr;

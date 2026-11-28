@@ -44,6 +44,10 @@
     els.authMessage = document.getElementById("admin-auth-message");
     els.authAction = document.getElementById("admin-auth-action");
     els.content = document.getElementById("admin-content");
+    els.statProducts = document.getElementById("stat-products");
+    els.statCategories = document.getElementById("stat-categories");
+    els.statPrice = document.getElementById("stat-price");
+    els.statUpdated = document.getElementById("stat-updated");
 
     els.authForm = document.getElementById("admin-auth-form");
     els.username = document.getElementById("admin-username");
@@ -324,6 +328,7 @@
     try {
       state.products = await SARI.api.getProducts({});
       state.categories = await SARI.api.getCategories();
+      renderStats();
       renderRows();
       fillCategories();
     } catch (err) {
@@ -347,6 +352,28 @@
     return state.products.filter(function (product) {
       return (product.name + " " + product.category).toLowerCase().indexOf(term) !== -1;
     });
+  }
+
+  // Catalog-wide numbers, independent of the search filter.
+  function renderStats() {
+    var products = state.products;
+    var categories = {};
+    var priceSum = 0;
+    var latest = 0;
+
+    products.forEach(function (product) {
+      categories[product.category] = true;
+      priceSum += Number(product.price) || 0;
+      var time = Date.parse(product.updatedAt);
+      if (time > latest) latest = time;
+    });
+
+    els.statProducts.textContent = products.length;
+    els.statCategories.textContent = Object.keys(categories).length;
+    els.statPrice.textContent = products.length
+      ? SARI.money(Math.round(priceSum / products.length))
+      : "—";
+    els.statUpdated.textContent = latest ? SARI.formatDate(latest) : "—";
   }
 
   function renderRows() {

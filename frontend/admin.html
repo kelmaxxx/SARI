@@ -109,6 +109,25 @@
     </section>
 
     <div id="admin-content" hidden>
+      <dl class="stat-grid" aria-label="Catalog summary">
+        <div class="stat stat-featured">
+          <dt><i data-lucide="package" aria-hidden="true"></i>Products</dt>
+          <dd id="stat-products">0</dd>
+        </div>
+        <div class="stat">
+          <dt><i data-lucide="tags" aria-hidden="true"></i>Categories</dt>
+          <dd id="stat-categories">0</dd>
+        </div>
+        <div class="stat">
+          <dt><i data-lucide="banknote" aria-hidden="true"></i>Average price</dt>
+          <dd id="stat-price">—</dd>
+        </div>
+        <div class="stat">
+          <dt><i data-lucide="clock" aria-hidden="true"></i>Last updated</dt>
+          <dd id="stat-updated" class="stat-date">—</dd>
+        </div>
+      </dl>
+
       <div class="table-card">
         <div class="admin-toolbar">
           <div class="search">
@@ -266,6 +285,6 @@
   <script src="js/mock-data.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/api.js?v=2"></script>
-  <script src="js/admin.js?v=5"></script>
+  <script src="js/admin.js?v=6"></script>
 </body>
 </html>
